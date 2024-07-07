@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue List Component</title>
+    <style>
+      .list-item {
+        width: 100%;
+        height: 500px;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import { createApp, defineComponent, ref, onMounted } from "vue";
+
+      const ListComponent = defineComponent({
+        name: "ListComponent",
+        setup() {
+          const list = ref([{ background: "rgb(233,32,38)" }]);
+          const loading = ref(false);
+
+          const getRandomColor = () => {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r},${g},${b})`;
+          };
+
+          const getList = async (num) => {
+            loading.value = true;
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                const newList = Array.from({ length: num }, () => ({
+                  background: getRandomColor(),
+                }));
+                resolve(newList);
+                loading.value = false;
+              }, Math.random() * 500);
+            });
+          };
+
+          const updateList = async () => {
+            const newList = await getList(10);
+            list.value = newList;
+          };
+
+          onMounted(() => {
+            updateList();
+            window.addEventListener("scroll", async () => {
+              if (
+                window.innerHeight + window.scrollY >=
+                document.body.offsetHeight / 2
+              ) {
+                await updateList();
+              }
+            });
+          });
+
+          return {
+            list,
+            loading,
+          };
+        },
+        template: `
+        <div>
+          <div v-for="(item, index) in list" :key="index" :style="{ height: '500px', background: item.background }" class="list-item">
+            {{ index + 1 }}
+          </div>
+          <div v-if="loading">Loading...</div>
+        </div>
+      `,
+      });
+
+      createApp({
+        components: {
+          ListComponent,
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
